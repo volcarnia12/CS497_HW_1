@@ -201,6 +201,39 @@ app.delete('/api/comments/delete', (req, res) => {
   });
 });
 
+app.delete('/api/posts/delete', (req, res) => {
+  const { postid } = req.body;
+
+  if (postid === undefined){
+    res.status(400).json({
+      message: 'Missing postid'
+    });
+    return;
+  }
+  let getPost = {};
+  fs.readFile('posts.json', 'utf8', function(err, data1){
+    let postsContent = JSON.parse(data1);
+    const post = postsContent.table.find((post) => post.postid == postid);
+    if ( post === undefined){
+      res.status(404).json({
+        message: 'Post does not exist'
+      });
+      return;
+    }
+    let newPost = postsContent.table.filter(object => {
+      return object.postid !== postid;
+    });
+    postsJSON.table = newPost;
+    getPost = { postid: postid, userid: post.userid, name: post.name, content: post.content };
+    fs.writeFile('posts.json', JSON.stringify(postsJSON), function(err) {
+      if (err) throw err;
+      console.log('complete');
+    });
+    res.json(getPost);
+    return;
+  });
+});
+
 app.listen(port, () => {
     console.log(`Example app listening at http://localhost:${port}`);
   });
