@@ -14,6 +14,7 @@ let userJSON = { table: [] };
 let postsJSON = { table: [] };
 let commentsJSON = { table: [] };
 
+
 app.post('/api/user/create', (req, res) => {
     const { name } = req.body;
     let content = "";
@@ -46,6 +47,7 @@ app.post('/api/user/create', (req, res) => {
 
     res.json(user);
 });
+
 
 app.post('/api/posts/create', (req, res) => {
     const { userid, content } = req.body;
@@ -88,6 +90,7 @@ app.post('/api/posts/create', (req, res) => {
       return;
     });
 });
+
 
 app.post('/api/comments/create', (req, res) => {
   const { userid, postid, content } = req.body;
@@ -141,6 +144,7 @@ app.post('/api/comments/create', (req, res) => {
   });
 });
 
+
 app.get('/api/comments/get', (req, res) => {
   const { commentid } = req.body;
 
@@ -166,7 +170,9 @@ app.get('/api/comments/get', (req, res) => {
   });
 });
 
+
 // 3 Additional Routes //
+
 
 app.delete('/api/comments/delete', (req, res) => {
   const { commentid } = req.body;
@@ -201,6 +207,7 @@ app.delete('/api/comments/delete', (req, res) => {
   });
 });
 
+
 app.delete('/api/posts/delete', (req, res) => {
   const { postid } = req.body;
 
@@ -233,6 +240,7 @@ app.delete('/api/posts/delete', (req, res) => {
     return;
   });
 });
+
 
 app.delete('/api/user/delete', (req, res) => {
   const { userid } = req.body;
