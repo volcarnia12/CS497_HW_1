@@ -234,6 +234,39 @@ app.delete('/api/posts/delete', (req, res) => {
   });
 });
 
+app.delete('/api/user/delete', (req, res) => {
+  const { userid } = req.body;
+
+  if (userid === undefined){
+    res.status(400).json({
+      message: 'Missing userid'
+    });
+    return;
+  }
+  let getUser = {};
+  fs.readFile('users.json', 'utf8', function(err, data1){
+    let usersContent = JSON.parse(data1);
+    const user = usersContent.table.find((user) => user.userid == userid);
+    if ( user === undefined){
+      res.status(404).json({
+        message: 'User does not exist'
+      });
+      return;
+    }
+    let newUser = usersContent.table.filter(object => {
+      return object.userid !== userid;
+    });
+    userJSON.table = newUser;
+    getUser = { userid: userid, name: user.name };
+    fs.writeFile('users.json', JSON.stringify(userJSON), function(err) {
+      if (err) throw err;
+      console.log('complete');
+    });
+    res.json(getUser);
+    return;
+  });
+});
+
 app.listen(port, () => {
     console.log(`Example app listening at http://localhost:${port}`);
   });
