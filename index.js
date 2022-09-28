@@ -166,6 +166,41 @@ app.get('/api/comments/get', (req, res) => {
   });
 });
 
+// 3 Additional Routes //
+
+app.delete('/api/comments/delete', (req, res) => {
+  const { commentid } = req.body;
+
+  if (commentid === undefined){
+    res.status(400).json({
+      message: 'Missing commentid'
+    });
+    return;
+  }
+  let getComment = {};
+  fs.readFile('comments.json', 'utf8', function(err, data1){
+    let commentContent = JSON.parse(data1);
+    const comment = commentContent.table.find((comment) => comment.commentid == commentid);
+    if ( comment === undefined){
+      res.status(404).json({
+        message: 'Comment does not exist'
+      });
+      return;
+    }
+    let newComment = commentContent.table.filter(object => {
+      return object.commentid !== commentid;
+    });
+    commentsJSON.table = newComment;
+    getComment = { commentid: commentid, postid: comment.postid, userid: comment.userid, name: comment.name, content: comment.content };
+    fs.writeFile('comments.json', JSON.stringify(commentsJSON), function(err) {
+      if (err) throw err;
+      console.log('complete');
+    });
+    res.json(getComment);
+    return;
+  });
+});
+
 app.listen(port, () => {
     console.log(`Example app listening at http://localhost:${port}`);
   });
