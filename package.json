@@ -1,5 +1,5 @@
 {
-  "name": "01-monolith",
+  "name": "fakedata",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -19,6 +19,7 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
+    "@faker-js/faker": "^7.5.0",
     "eslint": "^8.23.0"
   }
 }

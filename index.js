@@ -2,6 +2,72 @@ import express from 'express';
 import logger from 'morgan';
 import * as fs from 'fs';
 import {v4 as uuidv4} from 'uuid';
+import { faker } from '@faker-js/faker';
+
+
+
+fs.readFile('dataTest.json', 'utf8', function(err, data1){
+  let dataTest = JSON.parse(data1);
+  if (dataTest.length === 0){
+    generateData();
+    fs.writeFile('dataTest.json', JSON.stringify([1]), function(err) {
+      if (err) throw err;
+      console.log('complete');
+    });
+  }
+});
+
+function generateData() {
+  let userData = [];
+  let postData = [];
+  let commentData = [];
+  for (let userCount = 0; userCount <= 1000; userCount++) {
+    let userName = faker.name.firstName();
+    while (userName.length > 64){
+      userName = faker.name.firstName();
+    }
+    let content = faker.random.words();
+    while (content.length > 128){
+      content = faker.random.words();
+    }
+    let userDatas = { "userid": userCount, "name": userName };
+    let postsData = { "postid": userCount - 1, "userid": userCount, "name": userName, "content": content };
+    let commentsData = { "commentid": userCount - 2, "postid": userCount - 1, "userid": userCount, "name": userName, "content": content };
+    userData.push(userDatas);
+    postData.push(postsData);
+    commentData.push(commentsData);
+  }
+  fs.readFile('users.json', 'utf8', function(err, data1){
+    let data = JSON.parse(data1);
+    for (let x = 0; x < data.length; ++x){
+      userData.push(data[x]);
+    }
+    fs.writeFile('users.json', JSON.stringify(userData), function(err) {
+      if (err) throw err;
+        console.log('complete');
+    });
+  });
+  fs.readFile('posts.json', 'utf8', function(err, data2){
+    let data = JSON.parse(data2);
+    for (let x = 0; x < data.length; ++x){
+      postData.push(data[x]);
+    }
+    fs.writeFile('posts.json', JSON.stringify(postData), function(err) {
+      if (err) throw err;
+        console.log('complete');
+    });
+  });
+  fs.readFile('comments.json', 'utf8', function(err, data3){
+    let data = JSON.parse(data3);
+    for (let x = 0; x < data.length; ++x){
+      commentData.push(data[x]);
+    }
+    fs.writeFile('comments.json', JSON.stringify(commentData), function(err) {
+      if (err) throw err;
+        console.log('complete');
+    });
+  });
+}
 
 const app = express();
 const port = 3000;
@@ -9,10 +75,6 @@ const port = 3000;
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-
-let userJSON = { table: [] };
-let postsJSON = { table: [] };
-let commentsJSON = { table: [] };
 
 
 app.post('/api/user/create', (req, res) => {
@@ -35,11 +97,9 @@ app.post('/api/user/create', (req, res) => {
 
     let user = { userid: userId, name};
     fs.readFile('users.json', 'utf8', function(err, data){
-      console.log(data);
       content = JSON.parse(data);
-      content.table.push(user);
-      userJSON = content;
-      fs.writeFile('users.json', JSON.stringify(userJSON), function(err) {
+      content.push(user);
+      fs.writeFile('users.json', JSON.stringify(content), function(err) {
         if (err) throw err;
         console.log('complete');
         });
@@ -69,7 +129,7 @@ app.post('/api/posts/create', (req, res) => {
 
     fs.readFile('users.json', 'utf8', function(err, data1){
       let contentPost = JSON.parse(data1);
-      const user = contentPost.table.find((user) => user.userid == userid);
+      const user = contentPost.find((user) => user.userid == userid);
       if (user === undefined){
         res.status(404).json({
           message: 'User does not exist'
@@ -79,9 +139,8 @@ app.post('/api/posts/create', (req, res) => {
       post = { postid: postId, userid: userid, name: user.name, content: content };
       fs.readFile('posts.json', 'utf8', function(err, data2){
         let postContent = JSON.parse(data2);
-        postContent.table.push(post);
-        postsJSON = postContent;
-        fs.writeFile('posts.json', JSON.stringify(postsJSON), function(err) {
+        postContent.push(post);
+        fs.writeFile('posts.json', JSON.stringify(postContent), function(err) {
           if (err) throw err;
           console.log('complete');
         });
@@ -112,7 +171,7 @@ app.post('/api/comments/create', (req, res) => {
   let comment = {};
   fs.readFile('users.json', 'utf8', function(err, data1){
     let userContent = JSON.parse(data1);
-    const user = userContent.table.find((user) => user.userid == userid);
+    const user = userContent.find((user) => user.userid == userid);
     if (user === undefined){
       res.status(404).json({
         message: 'User does not exist'
@@ -121,7 +180,7 @@ app.post('/api/comments/create', (req, res) => {
     }
     fs.readFile('posts.json', 'utf8', function(err, data2){
       let postContent = JSON.parse(data2);
-      const posts = postContent.table.find((post) => post.postid == postid);
+      const posts = postContent.find((post) => post.postid == postid);
       if (posts === undefined){
         res.status(404).json({
           message: 'Post does not exist'
@@ -131,9 +190,8 @@ app.post('/api/comments/create', (req, res) => {
       comment = { commentid: commentId, postid: postid, userid: userid, name: posts.name, content: content };
       fs.readFile('comments.json', 'utf8', function(err, data3){
         let commentContent = JSON.parse(data3);
-        commentContent.table.push(comment);
-        commentsJSON = commentContent;
-        fs.writeFile('comments.json', JSON.stringify(commentsJSON), function(err) {
+        commentContent.push(comment);
+        fs.writeFile('comments.json', JSON.stringify(commentContent), function(err) {
           if (err) throw err;
           console.log('complete');
         });
@@ -157,7 +215,7 @@ app.get('/api/comments/get', (req, res) => {
   let getComment = {};
   fs.readFile('comments.json', 'utf8', function(err, data1){
     let commentContent = JSON.parse(data1);
-    const comment = commentContent.table.find((comment) => comment.commentid == commentid);
+    const comment = commentContent.find((comment) => comment.commentid == commentid);
     if ( comment === undefined){
       res.status(404).json({
         message: 'Comment does not exist'
@@ -186,19 +244,18 @@ app.delete('/api/comments/delete', (req, res) => {
   let getComment = {};
   fs.readFile('comments.json', 'utf8', function(err, data1){
     let commentContent = JSON.parse(data1);
-    const comment = commentContent.table.find((comment) => comment.commentid == commentid);
+    const comment = commentContent.find((comment) => comment.commentid == commentid);
     if ( comment === undefined){
       res.status(404).json({
         message: 'Comment does not exist'
       });
       return;
     }
-    let newComment = commentContent.table.filter(object => {
+    let newComment = commentContent.filter(object => {
       return object.commentid !== commentid;
     });
-    commentsJSON.table = newComment;
     getComment = { commentid: commentid, postid: comment.postid, userid: comment.userid, name: comment.name, content: comment.content };
-    fs.writeFile('comments.json', JSON.stringify(commentsJSON), function(err) {
+    fs.writeFile('comments.json', JSON.stringify(newComment), function(err) {
       if (err) throw err;
       console.log('complete');
     });
@@ -220,19 +277,18 @@ app.delete('/api/posts/delete', (req, res) => {
   let getPost = {};
   fs.readFile('posts.json', 'utf8', function(err, data1){
     let postsContent = JSON.parse(data1);
-    const post = postsContent.table.find((post) => post.postid == postid);
+    const post = postsContent.find((post) => post.postid == postid);
     if ( post === undefined){
       res.status(404).json({
         message: 'Post does not exist'
       });
       return;
     }
-    let newPost = postsContent.table.filter(object => {
+    let newPost = postsContent.filter(object => {
       return object.postid !== postid;
     });
-    postsJSON.table = newPost;
     getPost = { postid: postid, userid: post.userid, name: post.name, content: post.content };
-    fs.writeFile('posts.json', JSON.stringify(postsJSON), function(err) {
+    fs.writeFile('posts.json', JSON.stringify(newPost), function(err) {
       if (err) throw err;
       console.log('complete');
     });
@@ -254,19 +310,18 @@ app.delete('/api/user/delete', (req, res) => {
   let getUser = {};
   fs.readFile('users.json', 'utf8', function(err, data1){
     let usersContent = JSON.parse(data1);
-    const user = usersContent.table.find((user) => user.userid == userid);
+    const user = usersContent.find((user) => user.userid == userid);
     if ( user === undefined){
       res.status(404).json({
         message: 'User does not exist'
       });
       return;
     }
-    let newUser = usersContent.table.filter(object => {
+    let newUser = usersContent.filter(object => {
       return object.userid !== userid;
     });
-    userJSON.table = newUser;
     getUser = { userid: userid, name: user.name };
-    fs.writeFile('users.json', JSON.stringify(userJSON), function(err) {
+    fs.writeFile('users.json', JSON.stringify(newUser), function(err) {
       if (err) throw err;
       console.log('complete');
     });
